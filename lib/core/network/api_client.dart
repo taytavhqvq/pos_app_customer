@@ -1,15 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://<YOUR_SERVER_IP>:3000/api';
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
 
   late final Dio dio;
 
-  ApiClient() {
+  ApiClient._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl,
+        baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),
@@ -25,14 +27,24 @@ class ApiClient {
           }
           return handler.next(options);
         },
-        onError: (error, handler) {
-          // token หมดอายุ (24h ตามที่ตั้งไว้ฝั่ง backend) → เด้งกลับ login
+        onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401) {
-            // TODO: เรียก AuthProvider.logout() + navigate ไป LoginScreen
+            // token หมดอายุ (24h) -> เคลียร์ session ทิ้ง
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.remove('token');
+            await prefs.remove('customer');
           }
           return handler.next(error);
         },
       ),
     );
+  }
+
+  // ดึงข้อความ error จาก response ให้ตรงกับ format { success, message, data } ของ backend
+  static String extractErrorMessage(DioException e, String fallback) {
+    if (e.response?.data is Map && e.response?.data['message'] != null) {
+      return e.response!.data['message'];
+    }
+    return fallback;
   }
 }
