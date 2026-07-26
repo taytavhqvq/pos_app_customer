@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pos_app_customer/providers/notification_provider.dart';
+import 'package:pos_app_customer/providers/order_provider.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
@@ -45,6 +47,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (error == null) {
+      final token = authProvider.token!;
+      context.read<NotificationProvider>().init(
+        token,
+        context.read<OrderProvider>(),
+      );
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const DashboardScreen()),

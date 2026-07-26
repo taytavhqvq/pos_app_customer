@@ -1,22 +1,28 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/socket_service.dart';
+import 'order_provider.dart';
 
 class NotificationProvider extends ChangeNotifier {
   final SocketService _socketService = SocketService();
-  final List<Map<String, dynamic>> _orderStatusEvents = [];
 
-  List<Map<String, dynamic>> get events => _orderStatusEvents;
+  // เก็บ event ล่าสุดไว้โชว์ banner/snackbar ในหน้าที่เปิดอยู่
+  Map<String, dynamic>? latestEvent;
 
-  void init(String token) {
+  void init(String token, OrderProvider orderProvider) {
     _socketService.connect(token);
     _socketService.onOrderStatus((data) {
-      _orderStatusEvents.insert(0, data);
-      notifyListeners(); // อัปเดต badge/snackbar ทันทีที่ admin กด verify/reject
+      latestEvent = data;
+      // sync สถานะใน list ให้ตรงทันที ไม่ต้องรอ user pull-to-refresh เอง
+      orderProvider.patchOrderStatus(data['orderid'], data['status']);
+      notifyListeners();
     });
   }
 
-  void dispose() {
+  void clearLatestEvent() {
+    latestEvent = null;
+  }
+
+  void disconnect() {
     _socketService.disconnect();
-    super.dispose();
   }
 }

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
 import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
+import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/notification_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 
@@ -17,7 +21,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // Provider อื่นๆ (Product, Cart, Order, Notification) จะเพิ่มในชุดถัดไป
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'MiniMart',
@@ -33,7 +40,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// เช็ค token ค้างอยู่ไหมตอนเปิดแอป ถ้ามีเข้า Dashboard เลย ไม่มีไป Login
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -45,7 +51,28 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthProvider>().tryAutoLogin();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.tryAutoLogin();
+
+    // ถ้ามี session ค้างอยู่ (auto-login สำเร็จ) ให้เชื่อม socket ทันที
+    if (authProvider.status == AuthStatus.authenticated &&
+        authProvider.token != null) {
+      if (!mounted) return;
+      context.read<NotificationProvider>().init(
+        authProvider.token!,
+        context.read<OrderProvider>(),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    context.read<NotificationProvider>().disconnect();
+    super.dispose();
   }
 
   @override
