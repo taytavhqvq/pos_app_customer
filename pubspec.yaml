@@ -31,6 +31,29 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # State management
+  provider: ^6.1.2
+
+  # API
+  dio: ^5.7.0
+
+  # Real-time
+  socket_io_client: ^2.0.3+1
+
+  # Local storage (เก็บ token, cache user)
+  shared_preferences: ^2.3.3
+
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
+  # UI helpers
+  flutter_screenutil: ^5.9.3   # responsive ตาม design ที่ export มาจาก Figma (ขนาด iPhone 17-1 กรอบคงที่)
+  intl: ^0.19.0                # format วันที่/ตัวเลข (เหมือน toLocaleString ฝั่งเว็บ)
+  shimmer: ^3.0.0              # loading skeleton
+
+  # QR
+  qr_flutter: ^4.1.0           # ไม่ได้ใช้ generate จริง (เพราะ QR เป็น static asset) แต่เผื่อ preview/debug
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
