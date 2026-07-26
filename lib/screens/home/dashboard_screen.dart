@@ -71,7 +71,7 @@ class _DashboardHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
-    final cartProvider = context.watch<CartProvider>();
+    //final cartProvider = context.watch<CartProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
