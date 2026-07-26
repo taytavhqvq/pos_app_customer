@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../providers/cart_provider.dart';
+//import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
 import '../cart/cart_screen.dart';
 import '../orders/order_history_screen.dart';
