@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
 import 'change_password_screen.dart';
+import 'edit_phone_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -77,8 +78,20 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('ເບີໂທລະສັບ'),
                     subtitle: Text(customer?.phone ?? '-'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // TODO: เปิดฟอร์มแก้ไขเบอร์โทร -> PUT /customer/profile
+                    onTap: () async {
+                      final newPhone = await Navigator.push<String>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditPhoneScreen(
+                            currentPhone: customer?.phone ?? '',
+                          ),
+                        ),
+                      );
+                      if (newPhone != null && context.mounted) {
+                        context.read<AuthProvider>().updateCustomerPhone(
+                          newPhone,
+                        );
+                      }
                     },
                   ),
                   const Divider(height: 1),

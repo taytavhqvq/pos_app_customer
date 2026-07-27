@@ -38,7 +38,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     return Scaffold(
-      body: pages[_bottomNavIndex],
+      // เปลี่ยนจาก pages[_bottomNavIndex] เป็น IndexedStack
+      body: IndexedStack(index: _bottomNavIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomNavIndex,
         onTap: (i) => setState(() => _bottomNavIndex = i),

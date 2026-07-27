@@ -111,7 +111,7 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Image.asset(
-                'assets/images/shop_qr.png',
+                'lib/assets/images/MyQR.jpeg',
                 width: 220,
                 height: 220,
               ),

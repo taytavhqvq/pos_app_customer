@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/network/api_client.dart';
 import 'core/constants/app_colors.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
@@ -26,15 +27,25 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
-      child: MaterialApp(
-        title: 'MiniMart',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primaryColor: AppColors.primary,
-          scaffoldBackgroundColor: AppColors.background,
-          useMaterial3: true,
-        ),
-        home: const AuthWrapper(),
+      child: Builder(
+        builder: (context) {
+          // ผูก callback ตรงนี้ — ให้เข้าถึง AuthProvider ผ่าน context ได้
+          ApiClient.onUnauthorized = () {
+            context.read<AuthProvider>().forceLogout();
+            context.read<NotificationProvider>().disconnect();
+          };
+
+          return MaterialApp(
+            title: 'MiniMart',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              primaryColor: AppColors.primary,
+              scaffoldBackgroundColor: AppColors.background,
+              useMaterial3: true,
+            ),
+            home: const AuthWrapper(),
+          );
+        },
       ),
     );
   }

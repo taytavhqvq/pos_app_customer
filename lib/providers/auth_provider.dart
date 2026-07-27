@@ -14,6 +14,13 @@ class AuthProvider extends ChangeNotifier {
   String? token;
   bool isLoading = false;
 
+  void forceLogout() {
+    token = null;
+    customer = null;
+    status = AuthStatus.unauthenticated;
+    notifyListeners();
+  }
+
   // เรียกตอนเปิดแอปครั้งแรก เช็คว่ามี token ค้างอยู่ไหม (auto-login)
   Future<void> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,6 +36,14 @@ class AuthProvider extends ChangeNotifier {
     token = savedToken;
     customer = CustomerModel.fromJson(jsonDecode(savedCustomer));
     status = AuthStatus.authenticated;
+    notifyListeners();
+  }
+
+  Future<void> updateCustomerPhone(String newPhone) async {
+    if (customer == null) return;
+    customer = CustomerModel(cid: customer!.cid, phone: newPhone);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('customer', jsonEncode(customer!.toJson()));
     notifyListeners();
   }
 

@@ -1,8 +1,7 @@
 class ApiConstants {
   static const String baseUrl =
       'http://localhost:3000/api'; //'http://10.0.2.2:3000/api';
-  // Android Emulator ใช้ 10.0.2.2 แทน localhost
-  // มือถือจริงในวง LAN เดียวกัน เปลี่ยนเป็น IP เครื่อง backend เช่น http://192.168.1.50:3000/api
+
   static const String socketUrl = 'http://localhost:3000';
 
   // ===== Auth (customer) =====

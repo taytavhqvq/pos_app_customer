@@ -57,6 +57,33 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         onRefresh: () => orderProvider.loadFirstPage(),
         child: orderProvider.isLoadingList
             ? const Center(child: CircularProgressIndicator())
+            : orderProvider.errorMessage != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppColors.danger,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        orderProvider.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => orderProvider.loadFirstPage(),
+                        child: const Text('ລອງໃໝ່'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
             : orderProvider.orders.isEmpty
             ? const Center(child: Text('ຍັງບໍ່ມີການສັ່ງຊື້'))
             : ListView.separated(
