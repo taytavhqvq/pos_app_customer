@@ -47,9 +47,20 @@ class OrderSummaryScreen extends StatelessWidget {
           backgroundColor: AppColors.primary,
           iconTheme: const IconThemeData(color: Colors.white),
           title: const Text(
-            'ຢືນຢັນອໍເດີ',
+            'ຕະກ້າສິນຄ້າ',
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text(
+                  '${cart.items.length} ຈຳນວນ',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ),
+          ],
         ),
         body: cart.isEmpty
             ? const Center(child: Text('ບໍ່ມີສິນຄ້າໃນກະຕ່າ'))
@@ -59,94 +70,109 @@ class OrderSummaryScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'ລາຍການສິນຄ້າ',
+                      'ສິນຄ້າ',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
-                    // ===== รายการสินค้า แบบ read-only ไม่มีปุ่มแก้ไข/ลบ =====
-                    Card(
+                    // ===== การ์ดรายการสินค้า แบบอ่านอย่างเดียว ไม่มีปุ่มแก้ไข =====
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       child: Column(
-                        children: cart.items.map((item) {
-                          return ListTile(
-                            leading: item.product.imageUrl != null
-                                ? null
-                                : const Icon(
-                                    Icons.inventory_2_outlined,
-                                    color: AppColors.grey,
+                        children: [
+                          for (int i = 0; i < cart.items.length; i++) ...[
+                            if (i > 0) const Divider(height: 1),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Row(
+                                children: [
+                                  // thumbnail สินค้า
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.inventory_2_outlined,
+                                      color: Colors.grey,
+                                      size: 22,
+                                    ),
                                   ),
-                            title: Text(item.product.proname),
-                            subtitle: Text('${item.unit.uname} x ${item.qty}'),
-                            trailing: Text(
-                              '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.secondary,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          cart.items[i].product.proname,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${cart.items[i].qty} ${cart.items[i].unit.uname}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textLight,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    '${CurrencyFormatter.format(cart.items[i].lineTotal)} ກີບ',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.secondary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        }).toList(),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // ===== สรุปยอด =====
+                    // ===== ยอดรวม =====
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('ຈຳນວນລາຍການ'),
-                              Text('${cart.totalQty} ລາຍການ'),
-                            ],
+                          const Text(
+                            'ລວມ',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          const Divider(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'ລວມ',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                '${CurrencyFormatter.format(cart.totalAmount)} ກີບ',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '${CurrencyFormatter.format(cart.totalAmount)} ກີບ',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'ກະລຸນາກວດສອບລາຍການໃຫ້ຖືກຕ້ອງກ່ອນກົດສົ່ງອໍເດີ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFC9930D),
-                        ),
                       ),
                     ),
                   ],
@@ -171,7 +197,7 @@ class OrderSummaryScreen extends StatelessWidget {
                           ? null
                           : () => _confirmOrder(context),
                       child: const Text(
-                        'ສົ່ງອໍເດີ',
+                        'ຢືນຢັນສັ່ງຊື້ສິນຄ້າ',
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),

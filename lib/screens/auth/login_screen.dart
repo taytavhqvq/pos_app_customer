@@ -68,124 +68,130 @@ class _LoginScreenState extends State<LoginScreen> {
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      // เปลี่ยนจาก AppColors.primary เป็น background (ครีม) ให้ตรงภาพ
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ===== Logo (ตามดีไซน์: กรอบวงกลม ไอคอนร้านค้า) =====
+              // ===== Logo =====
               Container(
-                width: 64,
-                height: 64,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Icon(
                   Icons.storefront,
-                  color: AppColors.primary,
-                  size: 34,
+                  color: Colors.white,
+                  size: 36,
                 ),
               ),
               const SizedBox(height: 12),
               const Text(
                 'Minimart',
                 style: TextStyle(
-                  color: Colors.white,
+                  // เปลี่ยนจากขาวเป็นสีน้ำเงิน เพราะพื้นหลังตอนนี้เป็นครีมแล้ว
+                  color: AppColors.primary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 32),
 
-              // ===== ฟอร์ม login (การ์ดขาว) =====
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(20),
+              if (_errorMessage != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDECEA),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '⚠️ $_errorMessage',
+                    style: const TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    if (_errorMessage != null) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFDECEA),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '⚠️ $_errorMessage',
-                          style: const TextStyle(
-                            color: AppColors.danger,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                const SizedBox(height: 16),
+              ],
 
-                    AppTextField(
-                      hint: 'ເບີໂທ',
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      hint: 'ລະຫັດຜ່ານ',
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+              AppTextField(
+                label: 'ເບີໂທລະສັບ',
+                hint: 'ເບີໂທລະສັບ',
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'ລະຫັດຜ່ານ',
+                hint: 'ລະຫັດຜ່ານ',
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ),
+              const SizedBox(height: 24),
 
-                    AppButton(
-                      label: 'ເຂົ້າສູ່ລະບົບ',
-                      onPressed: _handleLogin,
-                      isLoading: isLoading,
-                    ),
-                    const SizedBox(height: 16),
+              AppButton(
+                label: 'ເຂົ້າສູ່ລະບົບ',
+                onPressed: _handleLogin,
+                isLoading: isLoading,
+              ),
+              const SizedBox(height: 20),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: Color(0xFFDDD8C8))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
                           'ຍັງບໍ່ມີບັນຊີ? ',
-                          style: TextStyle(color: AppColors.textLight),
+                          style: TextStyle(
+                            color: AppColors.textLight,
+                            fontSize: 13,
+                          ),
                         ),
                         GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
-                            ),
-                          ),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            );
+                            if (mounted) setState(() => _errorMessage = null);
+                          },
                           child: const Text(
                             'ສະໝັກສະມາຊິກ',
                             style: TextStyle(
                               color: AppColors.secondary,
                               fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const Expanded(child: Divider(color: Color(0xFFDDD8C8))),
+                ],
               ),
             ],
           ),

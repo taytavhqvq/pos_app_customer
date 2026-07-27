@@ -9,6 +9,8 @@ class AppTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputType keyboardType;
   final String? errorText;
+  final String?
+  label; // เพิ่มใหม่ — ไม่บังคับใส่ ไม่กระทบหน้าเดิมที่เรียกใช้อยู่
 
   const AppTextField({
     super.key,
@@ -19,6 +21,7 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
     this.errorText,
+    this.label,
   });
 
   @override
@@ -26,6 +29,17 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (label != null) ...[
+          Text(
+            label!,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
         TextField(
           controller: controller,
           obscureText: obscureText,

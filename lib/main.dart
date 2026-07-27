@@ -9,6 +9,7 @@ import 'providers/order_provider.dart';
 import 'providers/notification_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/dashboard_screen.dart';
+import 'screens/splash/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -59,17 +60,26 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  // เพิ่มบรรทัดนี้ — เก็บ reference ไว้ตั้งแต่ตอน context ยังปลอดภัย
+  late final NotificationProvider _notificationProvider;
+  bool _minSplashElapsed = false;
+
   @override
   void initState() {
     super.initState();
+    // เก็บ reference ตรงนี้ (context ยังใช้ได้ปกติ)
+    _notificationProvider = context.read<NotificationProvider>();
     _init();
+
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _minSplashElapsed = true);
+    });
   }
 
   Future<void> _init() async {
     final authProvider = context.read<AuthProvider>();
     await authProvider.tryAutoLogin();
 
-    // ถ้ามี session ค้างอยู่ (auto-login สำเร็จ) ให้เชื่อม socket ทันที
     if (authProvider.status == AuthStatus.authenticated &&
         authProvider.token != null) {
       if (!mounted) return;
@@ -82,7 +92,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   void dispose() {
-    context.read<NotificationProvider>().disconnect();
+    // ใช้ reference ที่เก็บไว้ ไม่ lookup context ใหม่
+    _notificationProvider.disconnect();
     super.dispose();
   }
 
@@ -90,8 +101,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     final status = context.watch<AuthProvider>().status;
 
-    if (status == AuthStatus.unknown) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (status == AuthStatus.unknown || !_minSplashElapsed) {
+      return const SplashScreen();
     }
     if (status == AuthStatus.authenticated) {
       return const DashboardScreen();

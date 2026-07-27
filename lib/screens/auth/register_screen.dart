@@ -19,7 +19,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _acceptTerms = false;
-  String? _errorMessage;
+
+  // error แยกตามช่อง แทนการใช้ banner รวมอันเดียว
+  String? _phoneError;
+  String? _passwordError;
+  String? _confirmError;
+  String? _termsError;
 
   @override
   void dispose() {
@@ -29,36 +34,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _handleRegister() async {
-    setState(() => _errorMessage = null);
+  bool _validate() {
+    setState(() {
+      _phoneError = null;
+      _passwordError = null;
+      _confirmError = null;
+      _termsError = null;
+    });
 
+    bool valid = true;
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
 
-    if (phone.isEmpty || password.isEmpty || confirm.isEmpty) {
-      setState(() => _errorMessage = 'ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ');
-      return;
-    }
-    if (!RegExp(r'^\d{8}$').hasMatch(phone)) {
-      setState(() => _errorMessage = 'ໝາຍເລກໂທລະສັບຕ້ອງມີ 8 ໂຕ');
-      return;
-    }
-    if (password.length < 6) {
-      setState(() => _errorMessage = 'ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວ');
-      return;
-    }
-    if (password != confirm) {
-      setState(() => _errorMessage = 'ລະຫັດຜ່ານບໍ່ກົງກັນ');
-      return;
-    }
-    if (!_acceptTerms) {
-      setState(() => _errorMessage = 'ກະລຸນາຍອມຮັບເງື່ອນໄຂການໃຊ້ງານ');
-      return;
+    if (phone.isEmpty) {
+      _phoneError = 'ກະລຸນາປ້ອນເບີໂທ';
+      valid = false;
+    } else if (!RegExp(r'^\d{8}$').hasMatch(phone)) {
+      _phoneError = 'ໝາຍເລກໂທລະສັບຕ້ອງມີ 8 ໂຕ';
+      valid = false;
     }
 
+    if (password.isEmpty) {
+      _passwordError = 'ກະລຸນາປ້ອນລະຫັດຜ່ານ';
+      valid = false;
+    } else if (password.length < 6) {
+      _passwordError = 'ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວ';
+      valid = false;
+    }
+
+    if (confirm.isEmpty) {
+      _confirmError = 'ກະລຸນາຢືນຢັນລະຫັດຜ່ານ';
+      valid = false;
+    } else if (password.isNotEmpty && password != confirm) {
+      // โชว์ error ใต้ทั้ง 2 ช่องตามที่ออกแบบไว้
+      _passwordError = 'ລະຫັດຜ່ານບໍ່ຕົງກັນ';
+      _confirmError = 'ລະຫັດຜ່ານບໍ່ຕົງກັນ';
+      valid = false;
+    }
+
+    if (!_acceptTerms) {
+      _termsError = 'ກະລຸນາຍອມຮັບເງື່ອນໄຂການໃຊ້ງານກ່ອນ';
+      valid = false;
+    }
+
+    setState(() {});
+    return valid;
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_validate()) return;
+
     final authProvider = context.read<AuthProvider>();
-    final error = await authProvider.register(phone, password);
+    final error = await authProvider.register(
+      _phoneController.text.trim(),
+      _passwordController.text,
+    );
 
     if (!mounted) return;
 
@@ -66,9 +97,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ລົງທະບຽນສຳເລັດ ກະລຸນາເຂົ້າສູ່ລະບົບ')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context); // กลับไป login เสมอ ห้ามเข้าหน้าหลักตรง
     } else {
-      setState(() => _errorMessage = error);
+      // error จาก backend ตอนนี้มีแค่กรณีเบอร์ซ้ำ -> เป็น field-level ของช่องเบอร์
+      setState(() => _phoneError = error);
     }
   }
 
@@ -77,158 +109,184 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'ສ້າງບັນຊີ',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // ===== Top bar มีปุ่มย้อนกลับ ตามดีไซน์ =====
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            children: [
+              // ===== Logo — pattern เดียวกับหน้า login =====
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.storefront,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Minimart',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              AppTextField(
+                label: 'ເບີໂທລະສັບ',
+                hint: 'ເບີໂທລະສັບ',
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                prefixIcon: const Icon(Icons.phone_outlined),
+                errorText: _phoneError,
+              ),
+              const SizedBox(height: 16),
+
+              AppTextField(
+                label: 'ລະຫັດຜ່ານ',
+                hint: 'ຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ',
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: Colors.grey,
                   ),
-                  const Text(
-                    'ສະໝັກສະມາຊິກ',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+                errorText: _passwordError,
+              ),
+              const SizedBox(height: 16),
+
+              AppTextField(
+                label: 'ຢືນຢັນລະຫັດຜ່ານ',
+                hint: 'ຢືນຢັນລະຫັດຜ່ານ',
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirm,
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirm
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+                errorText: _confirmError,
+              ),
+              const SizedBox(height: 12),
+
+              // ===== Checkbox ยอมรับเงื่อนไข =====
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: _acceptTerms,
+                    activeColor: AppColors.primary,
+                    onChanged: (v) {
+                      setState(() {
+                        _acceptTerms = v ?? false;
+                        if (_acceptTerms) _termsError = null;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: Text(
+                        'ຂ້ອຍຍອມຮັບຂໍ້ກຳນົດການໃຊ້ງານ ແລະ ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _termsError != null
+                              ? AppColors.danger
+                              : AppColors.textLight,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.storefront,
-                        color: AppColors.primary,
-                        size: 34,
+              if (_termsError != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, bottom: 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _termsError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Minimart',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        children: [
-                          if (_errorMessage != null) ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFDECEA),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '⚠️ $_errorMessage',
-                                style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-
-                          AppTextField(
-                            hint: 'ເບີໂທ',
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: const Icon(Icons.phone_outlined),
-                          ),
-                          const SizedBox(height: 12),
-                          AppTextField(
-                            hint: 'ລະຫັດຜ່ານ',
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          AppTextField(
-                            hint: 'ຢືນຢັນລະຫັດຜ່ານ',
-                            controller: _confirmPasswordController,
-                            obscureText: _obscureConfirm,
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureConfirm
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () => setState(
-                                () => _obscureConfirm = !_obscureConfirm,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _acceptTerms,
-                                onChanged: (v) =>
-                                    setState(() => _acceptTerms = v ?? false),
-                              ),
-                              const Expanded(
-                                child: Text(
-                                  'ຂ້າພະເຈົ້າຍອມຮັບເງື່ອນໄຂການໃຊ້ງານ',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textLight,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          AppButton(
-                            label: 'ສະໝັກສະມາຊິກ',
-                            onPressed: _handleRegister,
-                            isLoading: isLoading,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
+              const SizedBox(height: 12),
+
+              AppButton(
+                label: 'ລົງທະບຽນ',
+                onPressed: _handleRegister,
+                isLoading: isLoading,
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // ===== ลิงก์กลับไป login มีเส้นประขนาบ =====
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: Color(0xFFDDD8C8))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'ມີບັນຊີຢູ່ແລ້ວ? ',
+                          style: TextStyle(
+                            color: AppColors.textLight,
+                            fontSize: 13,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Text(
+                            'ເຂົ້າສູ່ລະບົບ',
+                            style: TextStyle(
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: Color(0xFFDDD8C8))),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

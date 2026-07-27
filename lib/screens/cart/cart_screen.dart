@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/cart_provider.dart';
-import '../checkout/order_summary_screen.dart'; // เปลี่ยนจาก upload_payment_screen เป็นตัวนี้
+import '../checkout/order_summary_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -27,49 +27,96 @@ class CartScreen extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: cart.items.length,
-              separatorBuilder: (_, __) => const Divider(),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final item = cart.items[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(item.product.proname),
-                    subtitle: Text('${item.unit.uname} x ${item.qty}'),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.secondary,
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.product.proname,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.unit.uname,
+                                  style: const TextStyle(
+                                    color: AppColors.textLight,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove, size: 18),
-                              onPressed: () =>
-                                  cart.updateQty(item.cartKey, item.qty - 1),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.secondary,
                             ),
-                            Text('${item.qty}'),
-                            IconButton(
-                              icon: const Icon(Icons.add, size: 18),
-                              onPressed: () =>
-                                  cart.updateQty(item.cartKey, item.qty + 1),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.remove_circle_outline,
+                              size: 20,
                             ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: AppColors.danger,
-                              ),
-                              onPressed: () => cart.removeItem(item.cartKey),
+                            onPressed: () =>
+                                cart.updateQty(item.cartKey, item.qty - 1),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('${item.qty}'),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 20,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            onPressed: () =>
+                                cart.updateQty(item.cartKey, item.qty + 1),
+                          ),
+                          const SizedBox(width: 12),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: AppColors.danger,
+                            ),
+                            onPressed: () => cart.removeItem(item.cartKey),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -108,7 +155,6 @@ class CartScreen extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          // แค่ไปหน้า summary ให้ review ก่อน ยังไม่ยิง API ที่นี่
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -117,7 +163,7 @@ class CartScreen extends StatelessWidget {
                           );
                         },
                         child: const Text(
-                          'ຢືນຢັນສັ່ງຊື້',
+                          'ຢືນຢັນສັ່ງຊື້ສິນຄ້າ',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
