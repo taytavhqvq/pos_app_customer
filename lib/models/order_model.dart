@@ -1,5 +1,6 @@
 class OrderItemModel {
   final String proname;
+  final String? imageUrl;
   final String uname;
   final int qty;
   final double unitPrice;
@@ -7,6 +8,7 @@ class OrderItemModel {
 
   OrderItemModel({
     required this.proname,
+    this.imageUrl,
     required this.uname,
     required this.qty,
     required this.unitPrice,
@@ -16,6 +18,7 @@ class OrderItemModel {
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     return OrderItemModel(
       proname: json['proname'],
+      imageUrl: json['image_url'],
       uname: json['uname'],
       qty: json['qty'],
       unitPrice: double.parse(json['unit_price'].toString()),

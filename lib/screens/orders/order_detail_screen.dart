@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
@@ -38,7 +40,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       icon = Icons.check_circle;
       title = 'ຄຳສັ່ງຊື້ຂອງທ່ານສຳເລັດແລ້ວ.';
       subtitle = 'ຂອບໃຈທີ່ເລືອກຊື້ສິນຄ້າກັບຮ້ານ minimart';
+    } else if (order.isPending && order.slipImageUrl == null) {
+      // ยังไม่แนบสลิปเลย — ต้องแยกจากเคส "รอร้านตรวจ"
+      bgColor = const Color(0xFFFFF3E0);
+      textColor = AppColors.warning;
+      icon = Icons.upload_file;
+      title = 'ກະລຸນາອັບໂຫຼດຮູບການໂອນເງີນເພື່ອດຳເນີນການຕໍ່';
+      subtitle = 'ອໍເດີຈະຖືກຍົກເລີກອັດຕະໂນມັດຖ້າບໍ່ອັບໂຫຼດພາຍໃນ 30 ນາທີ';
     } else if (order.isPending) {
+      // มีสลิปแล้ว รอแอดมินตรวจ
       bgColor = const Color(0xFFFFF3E0);
       textColor = AppColors.warning;
       icon = Icons.hourglass_bottom;
@@ -156,19 +166,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.inventory_2_outlined,
-                                    color: Colors.grey,
-                                    size: 22,
-                                  ),
+                                // ===== รูปสินค้า =====
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: order.items[i].imageUrl != null
+                                      ? CachedNetworkImage(
+                                          imageUrl:
+                                              '${ApiConstants.baseUrl.replaceAll('/api', '')}${order.items[i].imageUrl}',
+                                          width: 48,
+                                          height: 48,
+                                          fit: BoxFit.cover,
+                                          placeholder: (_, __) => Container(
+                                            width: 48,
+                                            height: 48,
+                                            color: Colors.grey.shade100,
+                                          ),
+                                          errorWidget: (_, __, ___) =>
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                color: Colors.grey.shade100,
+                                                child: const Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Colors.grey,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                        )
+                                      : Container(
+                                          width: 48,
+                                          height: 48,
+                                          color: Colors.grey.shade100,
+                                          child: const Icon(
+                                            Icons.inventory_2_outlined,
+                                            color: Colors.grey,
+                                            size: 22,
+                                          ),
+                                        ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -183,9 +219,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                           fontSize: 14,
                                         ),
                                       ),
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: 3),
+                                      // ===== ราคาต่อหน่วย x จำนวน =====
                                       Text(
-                                        '${order.items[i].qty} ${order.items[i].uname}',
+                                        '${CurrencyFormatter.format(order.items[i].unitPrice)} ກີບ / ${order.items[i].uname}  ×  ${order.items[i].qty}',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: AppColors.textLight,
@@ -194,12 +231,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  '${CurrencyFormatter.format(order.items[i].lineTotal)} ກີບ',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.secondary,
-                                  ),
+                                const SizedBox(width: 8),
+                                // ===== ราคารวมของรายการนี้ =====
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Text(
+                                      'ລວມ',
+                                      style: TextStyle(
+                                        color: AppColors.textLight,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${CurrencyFormatter.format(order.items[i].lineTotal)} ກີບ',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.secondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -245,7 +297,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _buildStatusMessage(order),
 
                   // ===== ปุ่มอัปโหลดใหม่ (เฉพาะกรณีปฏิเสธแบบ resubmit ได้) =====
-                  if (order.isRejected) ...[
+                  if (order.isRejected ||
+                      (order.isPending && order.slipImageUrl == null)) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,

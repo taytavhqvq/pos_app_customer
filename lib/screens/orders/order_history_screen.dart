@@ -195,6 +195,31 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                               ],
                             ),
                           ],
+                          if (order.isPending &&
+                              order.slipImageUrl == null) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 14,
+                                  color: AppColors.warning,
+                                ),
+                                const SizedBox(width: 4),
+                                const Expanded(
+                                  child: Text(
+                                    'ຍັງບໍ່ໄດ້ອັບໂຫຼດຮູບການໂອນເງີນ ກົດເພື່ອສົ່ງຮູບ',
+                                    style: TextStyle(
+                                      color: AppColors.warning,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),

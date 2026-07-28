@@ -111,7 +111,7 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
             // ===== การ์ดสรุปยอด =====
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
@@ -131,7 +131,7 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -152,78 +152,86 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // ===== QR ของร้าน + ปุ่มบันทึกรูป =====
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'ສະແກນ QR ເພື່ອຊຳລະເງີນ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'lib/assets/images/MyQR.jpeg',
-                      width: 220,
-                      height: 220,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 220,
-                        height: 220,
-                        color: Colors.grey.shade100,
-                        child: const Icon(
-                          Icons.qr_code_2,
-                          size: 60,
-                          color: Colors.grey,
+            // ซ่อนไปเลยหลังอัปโหลดสำเร็จ เพราะไม่จำเป็นต้องใช้อีก
+            // (ลดความสูงหน้าจอ + กันไม่ให้ layout กระโดดตอนโชว์ผลอัปโหลด)
+            if (!_uploaded) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'ສະແກນ QR ເພື່ອຊຳລະເງີນ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'lib/assets/images/MyQR.jpeg',
+                        width: 150,
+                        height: 150,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 150,
+                          height: 150,
+                          color: Colors.grey.shade100,
+                          child: const Icon(
+                            Icons.qr_code_2,
+                            size: 50,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ===== ปุ่มบันทึกรูป QR =====
-                  OutlinedButton.icon(
-                    onPressed: _savingQr ? null : _saveQrImage,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _savingQr ? null : _saveQrImage,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      icon: _savingQr
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.download,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                      label: Text(
+                        _savingQr ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຮູບ',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
-                    icon: _savingQr
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            Icons.download,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                    label: Text(
-                      _savingQr ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຮູບ',
-                      style: const TextStyle(color: AppColors.primary),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 16),
+            ],
 
-            // ===== ส่วนอัปโหลดรูปภาพจ่ายเงิน (เหมือนเดิมทั้งหมด ไม่ต้องแก้) =====
+            // ===== ส่วนอัปโหลดรูปภาพจ่ายเงิน =====
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -231,11 +239,11 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Container(
               width: double.infinity,
-              height: 180,
+              height: 150,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -277,10 +285,10 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                         children: [
                           Icon(
                             Icons.image_outlined,
-                            size: 40,
+                            size: 36,
                             color: Colors.grey,
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 6),
                           Text(
                             'ເລືອກຮູບພາບ\nພາບຈ່າຍເງີນຂອງທ່ານ',
                             textAlign: TextAlign.center,
@@ -290,79 +298,79 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                       ),
                     ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _uploaded ? null : _pickImage,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: _uploaded
-                            ? Colors.grey.shade300
-                            : AppColors.primary,
+            // ===== ปุ่ม เลือกรูป/อัปโหลด — ซ่อนหลังอัปโหลดสำเร็จ ไม่ต้องโชว์ปุ่ม disable ค้างไว้ =====
+            if (!_uploaded)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _pickImage,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      'ເລືອກຮູບ',
-                      style: TextStyle(
-                        color: _uploaded ? Colors.grey : AppColors.primary,
+                      child: const Text(
+                        'ເລືອກຮູບ',
+                        style: TextStyle(color: AppColors.primary),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _uploaded
-                        ? null
-                        : (isUploading || _slipImage == null ? null : _submit),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: AppColors.primary,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: (isUploading || _slipImage == null)
+                          ? null
+                          : _submit,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppColors.primary,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    child: isUploading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.upload, size: 18, color: Colors.white),
-                              SizedBox(width: 6),
-                              Text(
-                                'ອັບໂຫລດຮູບ',
-                                style: TextStyle(color: Colors.white),
+                      child: isUploading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
                               ),
-                            ],
-                          ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(
+                                  Icons.upload,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'ອັບໂຫລດຮູບ',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
             if (_uploaded) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               const Text(
                 '✅ ສົ່ງຫຼັກຖານແລ້ວ ລໍຖ້າຮ້ານຄ້າກວດສອບ',
                 style: TextStyle(color: AppColors.success),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
                 height: 48,

@@ -7,6 +7,7 @@ import '../cart/cart_screen.dart';
 import '../orders/order_history_screen.dart';
 import '../account/profile_screen.dart';
 import '../product/product_detail_screen.dart';
+import '../notifications/notification_screen.dart';
 import 'widgets/category_chip.dart';
 import 'widgets/product_card.dart';
 import 'widgets/promo_banner.dart';
@@ -78,40 +79,10 @@ class _DashboardHome extends StatelessWidget {
 
   const _DashboardHome({required this.onGoToCart});
 
-  void _showNotification(BuildContext context, Map<String, dynamic> event) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.notifications, color: AppColors.primary, size: 32),
-            const SizedBox(height: 12),
-            Text(
-              event['message']?.toString() ?? 'ມີການອັບເດດອໍເດີຂອງທ່ານ',
-              style: const TextStyle(fontSize: 15),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    ).then((_) {
-      if (context.mounted) {
-        context.read<NotificationProvider>().clearLatestEvent();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
-    final hasUnread = notificationProvider.latestEvent != null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -129,22 +100,39 @@ class _DashboardHome extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_none, color: Colors.white),
                 onPressed: () {
-                  final event = notificationProvider.latestEvent;
-                  if (event != null) {
-                    _showNotification(context, event);
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationScreen(),
+                    ),
+                  );
                 },
               ),
-              if (hasUnread)
+              if (notificationProvider.unreadCount > 0)
                 Positioned(
-                  top: 10,
-                  right: 10,
+                  top: 8,
+                  right: 8,
                   child: Container(
-                    width: 9,
-                    height: 9,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
                     decoration: const BoxDecoration(
                       color: AppColors.danger,
                       shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      '${notificationProvider.unreadCount}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

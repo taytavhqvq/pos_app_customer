@@ -113,56 +113,111 @@ class CartScreen extends StatelessWidget {
                                     fontSize: 15,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.unit.uname,
-                                  style: const TextStyle(
-                                    color: AppColors.textLight,
-                                    fontSize: 12,
-                                  ),
+                                const SizedBox(height: 4),
+                                // ===== ราคาต่อหน่วย แยกให้เห็นชัด =====
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      '${CurrencyFormatter.format(item.unit.saleprice)} ກີບ',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                        color: AppColors.secondary,
+                                      ),
+                                    ),
+                                    Text(
+                                      ' / ${item.unit.uname}',
+                                      style: const TextStyle(
+                                        color: AppColors.textLight,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.secondary,
                             ),
                           ),
                         ],
                       ),
                       const Divider(height: 20),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _QtyIconButton(
-                            icon: Icons.remove_circle_outline,
-                            onTap: () =>
-                                cart.updateQty(item.cartKey, item.qty - 1),
-                          ),
-                          SizedBox(
-                            width: 32,
-                            child: Text(
-                              '${item.qty}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                          // ===== ตัวควบคุมจำนวน พร้อมกำกับหน่วยใต้ตัวเลข =====
+                          Row(
+                            children: [
+                              _QtyIconButton(
+                                icon: Icons.remove_circle_outline,
+                                onTap: () =>
+                                    cart.updateQty(item.cartKey, item.qty - 1),
                               ),
-                            ),
+                              SizedBox(
+                                width: 46,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '${item.qty}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      item.unit.uname,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textLight,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              _QtyIconButton(
+                                icon: Icons.add_circle_outline,
+                                onTap: () =>
+                                    cart.updateQty(item.cartKey, item.qty + 1),
+                              ),
+                            ],
                           ),
-                          _QtyIconButton(
-                            icon: Icons.add_circle_outline,
-                            onTap: () =>
-                                cart.updateQty(item.cartKey, item.qty + 1),
-                          ),
-                          const SizedBox(width: 16),
-                          _QtyIconButton(
-                            icon: Icons.delete_outline,
-                            color: AppColors.danger,
-                            onTap: () => cart.removeItem(item.cartKey),
+                          // ===== ราคารวมของรายการนี้ + ปุ่มลบ =====
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'ລວມ',
+                                    style: TextStyle(
+                                      color: AppColors.textLight,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 10),
+                              _QtyIconButton(
+                                icon: Icons.delete_outline,
+                                color: AppColors.danger,
+                                onTap: () => cart.removeItem(item.cartKey),
+                              ),
+                            ],
                           ),
                         ],
                       ),
