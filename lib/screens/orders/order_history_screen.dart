@@ -155,7 +155,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${order.itemCount} ຈຳນວນ',
+                                '${order.itemCount} ລາຍການ',
                                 style: const TextStyle(
                                   color: AppColors.textLight,
                                   fontSize: 13,
