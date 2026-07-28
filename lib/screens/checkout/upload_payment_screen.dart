@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:gal/gal.dart'; // เพิ่ม import นี้
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -19,6 +21,7 @@ class UploadPaymentScreen extends StatefulWidget {
 class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
   File? _slipImage;
   bool _uploaded = false;
+  bool _savingQr = false; // เพิ่ม state สำหรับ loading ตอนบันทึก QR
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -28,6 +31,34 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
     );
     if (picked != null) {
       setState(() => _slipImage = File(picked.path));
+    }
+  }
+
+  // ===== เพิ่ม method นี้ — บันทึกรูป QR ของร้านลง gallery =====
+  Future<void> _saveQrImage() async {
+    setState(() => _savingQr = true);
+    try {
+      final byteData = await rootBundle.load('lib/assets/images/MyQR.jpeg');
+      final bytes = byteData.buffer.asUint8List();
+
+      await Gal.putImageBytes(
+        bytes,
+        name: 'minimart_qr_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ບັນທຶກຮູບ QR ລົງເຄື່ອງແລ້ວ')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ບັນທຶກຮູບບໍ່ສຳເລັດ ກະລຸນາອະນຸຍາດເຂົ້າເຖິງຮູບພາບ'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _savingQr = false);
     }
   }
 
@@ -123,7 +154,7 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ===== QR ของร้าน ย้ายมาไว้บนช่องอัปโหลด ตามดีไซน์ =====
+            // ===== QR ของร้าน + ปุ่มบันทึกรูป =====
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -156,12 +187,43 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // ===== ปุ่มบันทึกรูป QR =====
+                  OutlinedButton.icon(
+                    onPressed: _savingQr ? null : _saveQrImage,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: _savingQr
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(
+                            Icons.download,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                    label: Text(
+                      _savingQr ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຮູບ',
+                      style: const TextStyle(color: AppColors.primary),
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // ===== ส่วนอัปโหลดรูปภาพจ่ายเงิน =====
+            // ===== ส่วนอัปโหลดรูปภาพจ่ายเงิน (เหมือนเดิมทั้งหมด ไม่ต้องแก้) =====
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -171,7 +233,6 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
             ),
             const SizedBox(height: 10),
 
-            // กล่อง placeholder / preview รูปที่เลือก
             Container(
               width: double.infinity,
               height: 180,
@@ -231,7 +292,6 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
             ),
             const SizedBox(height: 14),
 
-            // ===== 2 ปุ่มแยกกัน: เลือกรูป / อัปโหลดรูป =====
             Row(
               children: [
                 Expanded(

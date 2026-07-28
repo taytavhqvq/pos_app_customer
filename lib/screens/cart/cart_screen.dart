@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/cart_provider.dart';
 import '../checkout/order_summary_screen.dart';
 
 class CartScreen extends StatelessWidget {
-  final VoidCallback onGoToHome; // callback ให้กดปุ่มแล้วสลับกลับ tab หน้าหลัก
+  final VoidCallback onGoToHome;
   const CartScreen({super.key, required this.onGoToHome});
 
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final serverRoot = ApiConstants.baseUrl.replaceAll('/api', '');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -27,7 +30,7 @@ class CartScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '${cart.itemCount} ຈຳນວນ',
+                '${cart.itemCount} ລາຍການ', // เปลี่ยนจาก "ຈຳນວນ" เป็น "ລາຍການ"
                 style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
@@ -46,7 +49,14 @@ class CartScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,6 +64,44 @@ class CartScreen extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // ===== รูปสินค้า มุมซ้าย =====
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: item.product.imageUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        '$serverRoot${item.product.imageUrl}',
+                                    width: 56,
+                                    height: 56,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Container(
+                                      width: 56,
+                                      height: 56,
+                                      color: Colors.grey.shade100,
+                                    ),
+                                    errorWidget: (_, __, ___) => Container(
+                                      width: 56,
+                                      height: 56,
+                                      color: Colors.grey.shade100,
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    width: 56,
+                                    height: 56,
+                                    color: Colors.grey.shade100,
+                                    child: const Icon(
+                                      Icons.inventory_2_outlined,
+                                      color: Colors.grey,
+                                      size: 24,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,6 +110,7 @@ class CartScreen extends StatelessWidget {
                                   item.product.proname,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -85,46 +134,35 @@ class CartScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const Divider(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.remove_circle_outline,
-                              size: 20,
-                            ),
-                            onPressed: () =>
+                          _QtyIconButton(
+                            icon: Icons.remove_circle_outline,
+                            onTap: () =>
                                 cart.updateQty(item.cartKey, item.qty - 1),
                           ),
-                          const SizedBox(width: 8),
-                          Text('${item.qty}'),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.add_circle_outline,
-                              size: 20,
+                          SizedBox(
+                            width: 32,
+                            child: Text(
+                              '${item.qty}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            onPressed: () =>
+                          ),
+                          _QtyIconButton(
+                            icon: Icons.add_circle_outline,
+                            onTap: () =>
                                 cart.updateQty(item.cartKey, item.qty + 1),
                           ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: AppColors.danger,
-                            ),
-                            onPressed: () => cart.removeItem(item.cartKey),
+                          const SizedBox(width: 16),
+                          _QtyIconButton(
+                            icon: Icons.delete_outline,
+                            color: AppColors.danger,
+                            onTap: () => cart.removeItem(item.cartKey),
                           ),
                         ],
                       ),
@@ -175,7 +213,7 @@ class CartScreen extends StatelessWidget {
                           );
                         },
                         child: const Text(
-                          'ຢືນຢັນສັ່ງຊື້ສິນຄ້າ',
+                          'ສັ່ງຊື້ສິນຄ້າ', // เปลี่ยนจาก "ยืนยันสั่งซื้อสินค้า" เป็น "สั่งซื้อสินค้า"
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
@@ -188,7 +226,28 @@ class CartScreen extends StatelessWidget {
   }
 }
 
-// ===== Empty state ตามภาพหน้า 10 =====
+// ปุ่ม icon เล็กๆ ใช้ในแถวควบคุมจำนวน/ลบ
+class _QtyIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const _QtyIconButton({required this.icon, required this.onTap, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Icon(icon, size: 20, color: color ?? AppColors.textDark),
+      ),
+    );
+  }
+}
+
+// ===== Empty state =====
 class _EmptyCart extends StatelessWidget {
   final VoidCallback onGoToHome;
   const _EmptyCart({required this.onGoToHome});

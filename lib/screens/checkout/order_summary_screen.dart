@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/cart_provider.dart';
@@ -37,6 +39,7 @@ class OrderSummaryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
     final isSubmitting = context.watch<OrderProvider>().isSubmittingOrder;
+    final serverRoot = ApiConstants.baseUrl.replaceAll('/api', '');
 
     return LoadingOverlay(
       isLoading: isSubmitting,
@@ -55,7 +58,7 @@ class OrderSummaryScreen extends StatelessWidget {
               padding: const EdgeInsets.only(right: 16),
               child: Center(
                 child: Text(
-                  '${cart.items.length} ຈຳນວນ',
+                  '${cart.itemCount} ລາຍການ', // เปลี่ยนจาก "ຈຳນວນ" เป็น "ລາຍການ"
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ),
@@ -78,7 +81,6 @@ class OrderSummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
 
-                    // ===== การ์ดรายการสินค้า แบบอ่านอย่างเดียว ไม่มีปุ่มแก้ไข =====
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
@@ -93,19 +95,44 @@ class OrderSummaryScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Row(
                                 children: [
-                                  // thumbnail สินค้า
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.inventory_2_outlined,
-                                      color: Colors.grey,
-                                      size: 22,
-                                    ),
+                                  // ===== รูปสินค้า มุมซ้าย =====
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        cart.items[i].product.imageUrl != null
+                                        ? CachedNetworkImage(
+                                            imageUrl:
+                                                '$serverRoot${cart.items[i].product.imageUrl}',
+                                            width: 44,
+                                            height: 44,
+                                            fit: BoxFit.cover,
+                                            placeholder: (_, __) => Container(
+                                              width: 44,
+                                              height: 44,
+                                              color: Colors.grey.shade100,
+                                            ),
+                                            errorWidget: (_, __, ___) =>
+                                                Container(
+                                                  width: 44,
+                                                  height: 44,
+                                                  color: Colors.grey.shade100,
+                                                  child: const Icon(
+                                                    Icons.image_not_supported,
+                                                    color: Colors.grey,
+                                                    size: 18,
+                                                  ),
+                                                ),
+                                          )
+                                        : Container(
+                                            width: 44,
+                                            height: 44,
+                                            color: Colors.grey.shade100,
+                                            child: const Icon(
+                                              Icons.inventory_2_outlined,
+                                              color: Colors.grey,
+                                              size: 22,
+                                            ),
+                                          ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -147,7 +174,6 @@ class OrderSummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // ===== ยอดรวม =====
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -197,7 +223,7 @@ class OrderSummaryScreen extends StatelessWidget {
                           ? null
                           : () => _confirmOrder(context),
                       child: const Text(
-                        'ຢືນຢັນສັ່ງຊື້ສິນຄ້າ',
+                        'ຢືນຢັນສັ່ງຊື້ສິນຄ້າ', // หน้านี้ยังคงเป็น "ยืนยัน" เหมือนเดิม เพราะเป็นขั้นตอนสุดท้ายจริงๆ
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
