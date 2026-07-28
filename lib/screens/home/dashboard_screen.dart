@@ -30,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _goToCartTab() {
+    FocusScope.of(context).unfocus(); // ปิดคีย์บอร์ดก่อนสลับไปแท็บตะกร้าเช่นกัน
     setState(() => _bottomNavIndex = 1);
   }
 
@@ -50,7 +51,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: IndexedStack(index: _bottomNavIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomNavIndex,
-        onTap: (i) => setState(() => _bottomNavIndex = i),
+        onTap: (i) {
+          FocusScope.of(context).unfocus();
+          setState(() => _bottomNavIndex = i);
+        },
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
@@ -83,6 +87,7 @@ class _DashboardHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
+    final products = productProvider.filteredProducts;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -204,7 +209,7 @@ class _DashboardHome extends StatelessWidget {
                             childAspectRatio: 0.72,
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final product = productProvider.filteredProducts[index];
+                        final product = products[index];
                         return ProductCard(
                           product: product,
                           onTap: () async {
@@ -222,7 +227,7 @@ class _DashboardHome extends StatelessWidget {
                             }
                           },
                         );
-                      }, childCount: productProvider.filteredProducts.length),
+                      }, childCount: products.length),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),

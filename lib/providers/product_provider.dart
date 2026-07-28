@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/product_model.dart';
 import '../models/category_model.dart';
@@ -13,14 +14,22 @@ class ProductProvider extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  // filter ฝั่ง client ตามที่ backend ไม่รองรับ query param
-  List<ProductModel> get filteredProducts {
-    return _allProducts.where((p) {
-      final matchSearch = p.proname.toLowerCase().contains(
-        searchQuery.toLowerCase(),
-      );
-      final matchCat =
-          selectedCatId == null || p.catname == _categoryName(selectedCatId!);
+  // ===== cache ผลลัพธ์ filter ไว้ ไม่คำนวณใหม่ทุกครั้งที่ถูกอ่าน =====
+  List<ProductModel> _filteredProductsCache = [];
+  List<ProductModel> get filteredProducts => _filteredProductsCache;
+
+  // ===== debounce สำหรับช่องค้นหา =====
+  Timer? _searchDebounce;
+
+  void _recomputeFilteredProducts() {
+    final query = searchQuery.toLowerCase();
+    final selectedCatName = selectedCatId == null
+        ? null
+        : _categoryName(selectedCatId!);
+
+    _filteredProductsCache = _allProducts.where((p) {
+      final matchSearch = p.proname.toLowerCase().contains(query);
+      final matchCat = selectedCatId == null || p.catname == selectedCatName;
       return matchSearch && matchCat;
     }).toList();
   }
@@ -41,6 +50,7 @@ class ProductProvider extends ChangeNotifier {
       ]);
       _allProducts = results[0] as List<ProductModel>;
       categories = results[1] as List<CategoryModel>;
+      _recomputeFilteredProducts();
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -51,16 +61,31 @@ class ProductProvider extends ChangeNotifier {
 
   void setCategory(int? catid) {
     selectedCatId = catid;
+    _recomputeFilteredProducts(); // เปลี่ยนหมวด ไม่ต้องหน่วง อยากให้ตอบสนองทันที
     notifyListeners();
   }
 
+  // ===== แก้ตรงนี้: หน่วงเวลาก่อนคำนวณ filter จริง =====
   void setSearchQuery(String query) {
-    searchQuery = query;
-    notifyListeners();
+    searchQuery =
+        query; // เก็บค่าล่าสุดไว้ก่อน (เผื่อ debounce ยิงช้ากว่าที่พิมพ์จริง)
+
+    _searchDebounce?.cancel(); // ยกเลิกตัวจับเวลาเก่า ถ้ายังพิมพ์ต่อ
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _recomputeFilteredProducts();
+      notifyListeners(); // rebuild แค่ตอนหยุดพิมพ์ครบ 300ms เท่านั้น
+    });
   }
 
   ProductModel? findById(int proid) {
     final match = _allProducts.where((p) => p.proid == proid);
     return match.isEmpty ? null : match.first;
+  }
+
+  // ===== ต้อง cancel timer ตอน provider ถูกทำลาย กัน memory leak / setState หลัง dispose =====
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 }

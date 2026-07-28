@@ -50,7 +50,7 @@ class OrderSummaryScreen extends StatelessWidget {
           backgroundColor: AppColors.primary,
           iconTheme: const IconThemeData(color: Colors.white),
           title: const Text(
-            'ຕະກ້າສິນຄ້າ',
+            'ສະຫຼຸບຄຳສັ່ງຊື້',
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
           actions: [

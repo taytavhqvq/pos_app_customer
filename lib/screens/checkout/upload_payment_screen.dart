@@ -21,20 +21,35 @@ class UploadPaymentScreen extends StatefulWidget {
 class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
   File? _slipImage;
   bool _uploaded = false;
-  bool _savingQr = false; // เพิ่ม state สำหรับ loading ตอนบันทึก QR
+  bool _savingQr = false;
+  bool _isPickingImage = false;
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-    if (picked != null) {
-      setState(() => _slipImage = File(picked.path));
+    if (_isPickingImage) return;
+
+    setState(() => _isPickingImage = true);
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        setState(() => _slipImage = File(picked.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ບໍ່ສາມາດເປີດຄັງຮູບພາບໄດ້ ລອງໃໝ່ອີກຄັ້ງ'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingImage = false);
     }
   }
 
-  // ===== เพิ่ม method นี้ — บันทึกรูป QR ของร้านลง gallery =====
   Future<void> _saveQrImage() async {
     setState(() => _savingQr = true);
     try {
@@ -59,6 +74,132 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
       );
     } finally {
       if (mounted) setState(() => _savingQr = false);
+    }
+  }
+
+  Future<void> _confirmExitToDashboard(BuildContext context) async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.45),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.warning,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              const Text(
+                'ຍັງບໍ່ໄດ້ອັບໂຫຼດສະລິບ',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              const Text(
+                'ທ່ານຍັງບໍ່ໄດ້ອັບໂຫຼດຮູບການໂອນເງີນ ແນ່ໃຈບໍ່ວ່າຈະອອກຈາກໜ້ານີ້?\n'
+                'ອໍເດີຂອງທ່ານຍັງຄ້າງຢູ່ ສາມາດກັບມາອັບໂຫຼດພາຍຫຼັງໄດ້ຈາກໜ້າ "ອໍເດີ"',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textLight,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              Container(height: 1, color: Colors.grey.shade200),
+              const SizedBox(height: 12),
+
+              const Text(
+                'ໝາຍເຫດ: ບໍ່ຕ້ອງອັບໂຫລດຮູບພາບພາຍໃນ 30 ນາທີ ຖ້າທ່ານຕ້ອງການຍົກເລີກ!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: const Text(
+                        'ຍົກເລີກ',
+                        style: TextStyle(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.danger,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      child: const Text(
+                        'ອອກ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (shouldExit == true && context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const DashboardScreen(initialIndex: 1),
+        ),
+        (route) => false,
+      );
     }
   }
 
@@ -103,6 +244,14 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         automaticallyImplyLeading: false,
+        actions: [
+          if (!_uploaded)
+            IconButton(
+              icon: const Icon(Icons.home_outlined, color: Colors.white),
+              tooltip: 'ກັບໄປໜ້າຫຼັກ',
+              onPressed: () => _confirmExitToDashboard(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -300,24 +449,30 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
             ),
             const SizedBox(height: 12),
 
-            // ===== ปุ่ม เลือกรูป/อัปโหลด — ซ่อนหลังอัปโหลดสำเร็จ ไม่ต้องโชว์ปุ่ม disable ค้างไว้ =====
             if (!_uploaded)
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _pickImage,
+                      onPressed: _isPickingImage ? null : _pickImage,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: AppColors.primary),
+                        disabledBackgroundColor: Colors.grey.shade100,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        'ເລືອກຮູບ',
-                        style: TextStyle(color: AppColors.primary),
-                      ),
+                      child: _isPickingImage
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(
+                              'ເລືອກຮູບ',
+                              style: TextStyle(color: AppColors.primary),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 12),
