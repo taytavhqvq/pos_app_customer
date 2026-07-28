@@ -315,7 +315,9 @@ class _UploadPaymentScreenState extends State<UploadPaymentScreen> {
                   ),
                   onPressed: () => Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const DashboardScreen(initialIndex: 1),
+                    ),
                     (route) => false,
                   ),
                   child: const Text(

@@ -34,6 +34,7 @@ class OrderModel {
   final String createdAt;
   final String? rejectReason;
   final String? slipImageUrl;
+  final int itemCount;
   final List<OrderItemModel> items;
 
   OrderModel({
@@ -46,10 +47,15 @@ class OrderModel {
     required this.createdAt,
     this.rejectReason,
     this.slipImageUrl,
+    this.itemCount = 0,
     this.items = const [],
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final itemsList = (json['items'] as List<dynamic>? ?? [])
+        .map((i) => OrderItemModel.fromJson(i))
+        .toList();
+
     return OrderModel(
       orderid: json['orderid'],
       orderCode: json['order_code'],
@@ -60,9 +66,10 @@ class OrderModel {
       createdAt: json['created_at'],
       rejectReason: json['reject_reason'],
       slipImageUrl: json['slip_image_url'],
-      items: (json['items'] as List<dynamic>? ?? [])
-          .map((i) => OrderItemModel.fromJson(i))
-          .toList(),
+      itemCount: json['item_count'] != null
+          ? int.parse(json['item_count'].toString())
+          : itemsList.length,
+      items: itemsList,
     );
   }
 

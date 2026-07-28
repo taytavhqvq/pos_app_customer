@@ -6,7 +6,8 @@ import '../../providers/cart_provider.dart';
 import '../checkout/order_summary_screen.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key});
+  final VoidCallback onGoToHome; // callback ให้กดปุ่มแล้วสลับกลับ tab หน้าหลัก
+  const CartScreen({super.key, required this.onGoToHome});
 
   @override
   Widget build(BuildContext context) {
@@ -16,14 +17,25 @@ class CartScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        title: Text(
-          'ກະຕ່າສິນຄ້າ (${cart.totalQty} ລາຍການ)',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+        title: const Text(
+          'ຕະກ້າສິນຄ້າ',
+          style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         automaticallyImplyLeading: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Text(
+                '${cart.itemCount} ຈຳນວນ',
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
       ),
       body: cart.isEmpty
-          ? const Center(child: Text('ບໍ່ມີສິນຄ້າໃນກະຕ່າ'))
+          ? _EmptyCart(onGoToHome: onGoToHome)
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: cart.items.length,
@@ -172,6 +184,71 @@ class CartScreen extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+// ===== Empty state ตามภาพหน้า 10 =====
+class _EmptyCart extends StatelessWidget {
+  final VoidCallback onGoToHome;
+  const _EmptyCart({required this.onGoToHome});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_basket_outlined,
+                color: AppColors.secondary,
+                size: 42,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'ກະຕ່າວ່າງເປົ່າ',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'ເລືອກສິນຄ້າເພີ່ມເຕີມ!',
+              style: TextStyle(fontSize: 13, color: AppColors.textLight),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: onGoToHome,
+                child: const Text(
+                  'ໄປເລືອກສິນຄ້າ',
+                  style: TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

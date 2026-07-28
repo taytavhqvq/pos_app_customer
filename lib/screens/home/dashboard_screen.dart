@@ -12,25 +12,35 @@ import 'widgets/product_card.dart';
 import 'widgets/promo_banner.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int initialIndex;
+  const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _bottomNavIndex = 0;
+  late int _bottomNavIndex;
 
-  // เพิ่ม method นี้ — ให้หน้าลูกเรียกเพื่อสลับไป tab ตะกร้าได้
+  @override
+  void initState() {
+    super.initState();
+    _bottomNavIndex = widget.initialIndex;
+  }
+
   void _goToCartTab() {
     setState(() => _bottomNavIndex = 1);
+  }
+
+  void _goToHomeTab() {
+    setState(() => _bottomNavIndex = 0);
   }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
       _DashboardHome(onGoToCart: _goToCartTab), // ส่ง callback ลงไป
-      const CartScreen(),
+      CartScreen(onGoToHome: _goToHomeTab),
       const OrderHistoryScreen(),
       const ProfileScreen(),
     ];

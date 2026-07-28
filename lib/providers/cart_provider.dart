@@ -8,6 +8,7 @@ class CartProvider extends ChangeNotifier {
   List<CartItemModel> get items => List.unmodifiable(_items);
 
   int get totalQty => _items.fold(0, (sum, item) => sum + item.qty);
+  int get itemCount => _items.length;
   double get totalAmount => _items.fold(0, (sum, item) => sum + item.lineTotal);
   bool get isEmpty => _items.isEmpty;
 

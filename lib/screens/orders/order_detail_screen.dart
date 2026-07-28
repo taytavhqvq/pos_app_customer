@@ -24,6 +24,74 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     });
   }
 
+  // กล่องข้อความสีตามสถานะ ด้านล่างยอดรวม
+  Widget _buildStatusMessage(order) {
+    Color bgColor;
+    Color textColor;
+    IconData icon;
+    String title;
+    String? subtitle;
+
+    if (order.isPaid) {
+      bgColor = const Color(0xFFE8F5E9);
+      textColor = AppColors.success;
+      icon = Icons.check_circle;
+      title = 'ຄຳສັ່ງຊື້ຂອງທ່ານສຳເລັດແລ້ວ.';
+      subtitle = 'ຂອບໃຈທີ່ເລືອກຊື້ສິນຄ້າກັບຮ້ານ minimart';
+    } else if (order.isPending) {
+      bgColor = const Color(0xFFFFF3E0);
+      textColor = AppColors.warning;
+      icon = Icons.hourglass_bottom;
+      title = 'ຮູບພາບຈ່າຍເງິນຂອງທ່ານຍັງບໍ່ໄດ້ຮັບການຢືນຢັນ';
+      subtitle = 'ກະລຸນາລໍຖ້າຮ້ານຄ້າກວດສອບ';
+    } else {
+      // rejected / cancelled
+      bgColor = const Color(0xFFFDECEA);
+      textColor = AppColors.danger;
+      icon = Icons.cancel;
+      title = order.isRejected ? 'ຮູບພາບຈ່າຍເງິນບໍ່ຖືກຕ້ອງ' : 'ອໍເດີຖືກຍົກເລີກ';
+      subtitle = order.rejectReason ?? 'ກະລຸນາຕິດຕໍ່ຮ້ານຄ້າ';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: textColor, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: textColor, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final orderProvider = context.watch<OrderProvider>();
@@ -34,10 +102,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          order != null ? order.orderCode : 'ລາຍລະອຽດອໍເດີ',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
+        title: order != null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    order.orderCode,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  Text(
+                    DateFormatter.formatDate(order.createdAt),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ],
+              )
+            : const Text(
+                'ລາຍລະອຽດອໍເດີ',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
         actions: [
           if (order != null)
             Padding(
@@ -53,84 +136,116 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    DateFormatter.formatDateTime(order.createdAt),
-                    style: const TextStyle(color: AppColors.textLight),
+                  const Text(
+                    'ສິນຄ້າ',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // ===== การ์ดรายการสินค้า custom row กันบั๊ก layout =====
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < order.items.length; i++) ...[
+                          if (i > 0) const Divider(height: 1),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.inventory_2_outlined,
+                                    color: Colors.grey,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        order.items[i].proname,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${order.items[i].qty} ${order.items[i].uname}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textLight,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '${CurrencyFormatter.format(order.items[i].lineTotal)} ກີບ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.secondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
-                  // ===== รายการสินค้า =====
-                  Card(
-                    child: Column(
-                      children: order.items
-                          .map(
-                            (item) => ListTile(
-                              title: Text(item.proname),
-                              subtitle: Text('${item.qty} ${item.uname}'),
-                              trailing: Text(
-                                '${CurrencyFormatter.format(item.lineTotal)} ກີບ',
-                              ),
-                            ),
-                          )
-                          .toList(),
+                  // ===== ยอดรวม =====
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'ລວມ',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '${CurrencyFormatter.format(order.total)} ກີບ',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // ===== แจ้งเตือนถูกปฏิเสธ (สิ่งที่แก้ backend เพิ่ม join tbpayments ไว้รองรับ) =====
-                  if (order.isRejected) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDECEA),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppColors.danger.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '⚠️ ການຊຳລະເງິນຖືກປະຕິເສດ',
-                            style: TextStyle(
-                              color: AppColors.danger,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'ລວມ',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          if (order.rejectReason != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'ເຫດຜົນ: ${order.rejectReason}',
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ],
-                        ],
-                      ),
+                        ),
+                        Text(
+                          '${CurrencyFormatter.format(order.total)} ກີບ',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ===== กล่องข้อความสถานะ ตามภาพ 12/13/14 =====
+                  _buildStatusMessage(order),
+
+                  // ===== ปุ่มอัปโหลดใหม่ (เฉพาะกรณีปฏิเสธแบบ resubmit ได้) =====
+                  if (order.isRejected) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -138,6 +253,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         onPressed: () => Navigator.push(
                           context,
@@ -150,20 +268,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
-                    ),
-                  ],
-
-                  // ===== รอตรวจสอบ - โชว์รูปสลิปที่ส่งไปแล้ว (ถ้ามี) =====
-                  if (order.isPending && order.slipImageUrl != null) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'ຮູບການໂອນເງີນທີ່ສົ່ງ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '⏳ ລໍຖ້າຮ້ານຄ້າກວດສອບ',
-                      style: TextStyle(color: AppColors.warning),
                     ),
                   ],
                 ],

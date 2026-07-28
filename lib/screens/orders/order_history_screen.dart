@@ -57,7 +57,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         onRefresh: () => orderProvider.loadFirstPage(),
         child: orderProvider.isLoadingList
             ? const Center(child: CircularProgressIndicator())
-            : orderProvider.errorMessage != null
+            : orderProvider.listErrorMessage != null
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -71,7 +71,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        orderProvider.errorMessage!,
+                        orderProvider.listErrorMessage!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppColors.danger),
                       ),
@@ -89,9 +89,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             : ListView.separated(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
-                itemCount:
-                    orderProvider.orders.length +
-                    1, // +1 สำหรับ loading indicator ล่างสุด
+                itemCount: orderProvider.orders.length + 1,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   if (index == orderProvider.orders.length) {
@@ -104,48 +102,100 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   }
 
                   final order = orderProvider.orders[index];
-                  return Card(
-                    child: ListTile(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              OrderDetailScreen(orderid: order.orderid),
-                        ),
+                  return GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            OrderDetailScreen(orderid: order.orderid),
                       ),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            order.orderCode,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          StatusBadge(status: order.status),
-                        ],
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      subtitle: Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(DateFormatter.formatDate(order.createdAt)),
-                          if (order.isRejected && order.rejectReason != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                '⚠️ ${order.rejectReason}',
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                order.orderCode,
                                 style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
                               ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  StatusBadge(status: order.status),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    size: 18,
+                                    color: AppColors.textLight,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            DateFormatter.formatDate(order.createdAt),
+                            style: const TextStyle(
+                              color: AppColors.textLight,
+                              fontSize: 12,
                             ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${order.itemCount} ຈຳນວນ',
+                                style: const TextStyle(
+                                  color: AppColors.textLight,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                '${CurrencyFormatter.format(order.total)} ກີບ',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if ((order.isRejected || order.isCancelled) &&
+                              order.rejectReason != null) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 14,
+                                  color: AppColors.danger,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    order.rejectReason!,
+                                    style: const TextStyle(
+                                      color: AppColors.danger,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
-                      ),
-                      trailing: Text(
-                        '${CurrencyFormatter.format(order.total)} ກີບ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
                       ),
                     ),
                   );

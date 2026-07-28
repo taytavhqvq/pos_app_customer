@@ -14,7 +14,8 @@ class OrderProvider extends ChangeNotifier {
   PaginationModel? pagination;
   bool isLoadingList = false;
   bool isLoadingMore = false;
-  String? errorMessage;
+  String?
+  listErrorMessage; // เปลี่ยนชื่อจาก errorMessage — เฉพาะเรื่องโหลดรายการ
 
   // ===== Order detail =====
   OrderModel? selectedOrder;
@@ -22,6 +23,8 @@ class OrderProvider extends ChangeNotifier {
 
   bool isSubmittingOrder = false;
   bool isUploadingSlip = false;
+  String?
+  errorMessage; // ตัวนี้เก็บเฉพาะ error จากการ "สั่งซื้อ" / "อัปโหลดสลิป" เท่านั้น
 
   // ===== สร้างออเดอร์ (checkout) =====
   Future<OrderModel?> createOrder(List<Map<String, dynamic>> items) async {
@@ -59,10 +62,10 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // ===== โหลดหน้าแรกของประวัติออเดอร์ (เรียกตอนเข้าหน้า หรือ pull-to-refresh) =====
+  // ===== โหลดหน้าแรกของประวัติออเดอร์ =====
   Future<void> loadFirstPage({String? status}) async {
     isLoadingList = true;
-    errorMessage = null;
+    listErrorMessage = null; // แก้เป็น listErrorMessage
     orders.clear();
     pagination = null;
     notifyListeners();
@@ -75,7 +78,7 @@ class OrderProvider extends ChangeNotifier {
       orders.addAll(result['orders'] as List<OrderModel>);
       pagination = result['pagination'] as PaginationModel;
     } catch (e) {
-      errorMessage = e.toString();
+      listErrorMessage = e.toString(); // แก้เป็น listErrorMessage
     } finally {
       isLoadingList = false;
       notifyListeners();
@@ -98,7 +101,7 @@ class OrderProvider extends ChangeNotifier {
       orders.addAll(result['orders'] as List<OrderModel>);
       pagination = result['pagination'] as PaginationModel;
     } catch (e) {
-      errorMessage = e.toString();
+      listErrorMessage = e.toString(); // แก้เป็น listErrorMessage
     } finally {
       isLoadingMore = false;
       notifyListeners();
@@ -113,14 +116,15 @@ class OrderProvider extends ChangeNotifier {
     try {
       selectedOrder = await _orderService.getOrderDetail(orderid);
     } catch (e) {
-      errorMessage = e.toString();
+      listErrorMessage = e
+          .toString(); // แก้เป็น listErrorMessage (ไม่ปนกับ errorMessage ของ checkout)
     } finally {
       isLoadingDetail = false;
       notifyListeners();
     }
   }
 
-  // เรียกหลังได้ event order_status จาก socket -> อัปเดตแถวในลิสต์แบบ real-time โดยไม่ต้อง reload ทั้งหน้า
+  // เรียกหลังได้ event order_status จาก socket
   void patchOrderStatus(int orderid, String newStatus) {
     final index = orders.indexWhere((o) => o.orderid == orderid);
     if (index >= 0) {
@@ -135,6 +139,7 @@ class OrderProvider extends ChangeNotifier {
         createdAt: old.createdAt,
         rejectReason: old.rejectReason,
         slipImageUrl: old.slipImageUrl,
+        itemCount: old.itemCount,
         items: old.items,
       );
       notifyListeners();
