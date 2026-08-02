@@ -13,9 +13,10 @@ class _PromoBannerState extends State<PromoBanner> {
   int _currentPage = 0;
 
   final List<String> _banners = const [
-    'lib/assets/images/pc1.jpg',
-    'lib/assets/images/pc2.jpg',
-    'lib/assets/images/wb.jpg',
+    'lib/assets/images/1.jpeg',
+    'lib/assets/images/2.jpeg',
+    'lib/assets/images/3.jpeg',
+    'lib/assets/images/4.jpeg',
   ];
 
   @override
